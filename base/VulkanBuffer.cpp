@@ -40,7 +40,7 @@ namespace vks
 	}
 
 	/** 
-	* Attach the allocated memory block to the buffer
+	* Attach the allocated memory block to the buffer object
 	* 
 	* @param offset (Optional) Byte offset (from the beginning) for the memory region to bind
 	* 
@@ -88,6 +88,7 @@ namespace vks
 	*
 	* @return VkResult of the flush call
 	*/
+	// 当使用非一致性内存时，CPU 写入的数据可能不会立即可见于 GPU，需要手动将 CPU 内存刷新到 GPU 内存。这个过程就是 flush。
 	VkResult Buffer::flush(VkDeviceSize size, VkDeviceSize offset)
 	{
 		VkMappedMemoryRange mappedRange = {};

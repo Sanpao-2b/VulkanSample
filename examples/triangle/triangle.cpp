@@ -200,6 +200,7 @@ public:
 		}
 	}
 
+	// 临时commandbuffer, 用于记录少量需要GPU立即执行的指令 需要配合flushCommandbuffer()函数
 	// Get a new command buffer from the command pool
 	// If begin is true, the command buffer is also started so we can start adding commands
 	VkCommandBuffer getCommandBuffer(bool begin)
@@ -224,6 +225,7 @@ public:
 		return cmdBuffer;
 	}
 
+	// 配合getCommanBuffer()函数, 停止记录+提交操作
 	// End the command buffer and submit it to the queue
 	// Uses a fence to ensure command buffer has finished executing before deleting it
 	void flushCommandBuffer(VkCommandBuffer commandBuffer)
@@ -332,6 +334,7 @@ public:
 		}
 	}
 
+	// 获取图像, 提交指令缓冲对象, present
 	void draw()
 	{
 #if defined(VK_USE_PLATFORM_MACOS_MVK)
@@ -343,8 +346,9 @@ public:
 		VK_CHECK_RESULT(vkWaitForFences(device, 1, &waitFences[currentBuffer], VK_TRUE, UINT64_MAX));
 		VK_CHECK_RESULT(vkResetFences(device, 1, &waitFences[currentBuffer]));
 #else
+		// step1. 获取图像
 		// SRS - on other platforms use original bare code with local semaphores/fences for illustrative purposes
-		// Get next image in the swap chain (back/front buffer)
+		// Get next image in the swap chain (back/front buffer)     为什么这里不用imageAvailableSemaphore?
 		VkResult acquire = swapChain.acquireNextImage(presentCompleteSemaphore, &currentBuffer);
 		if (!((acquire == VK_SUCCESS) || (acquire == VK_SUBOPTIMAL_KHR))) {
 			VK_CHECK_RESULT(acquire);
@@ -355,6 +359,7 @@ public:
 		VK_CHECK_RESULT(vkResetFences(device, 1, &queueCompleteFences[currentBuffer]));
 #endif
 
+		// step2. 提交指令缓冲对象
 		// Pipeline stage at which the queue submission will wait (via pWaitSemaphores)
 		VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		// The submit info structure specifies a command buffer queue submission batch
@@ -384,6 +389,7 @@ public:
 		// Submit to the graphics queue passing a wait fence
 		VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, queueCompleteFences[currentBuffer]));
 
+		// 呈现图像到视口
 		// Present the current buffer to the swap chain
 		// Pass the semaphore signaled by the command buffer submission from the submit info as the wait semaphore for swap chain presentation
 		// This ensures that the image is not presented to the windowing system until all commands have been submitted
@@ -1079,6 +1085,7 @@ public:
 		updateUniformBuffers();
 	}
 
+	// call when视角发生变换时
 	void updateUniformBuffers()
 	{
 		// Pass matrices to the shaders
@@ -1113,7 +1120,7 @@ public:
 	{
 		if (!prepared)
 			return;
-		draw();
+		draw(); // 绘制图像
 	}
 
 	virtual void viewChanged()

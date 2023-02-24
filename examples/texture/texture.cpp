@@ -107,7 +107,7 @@ public:
 			It's not advised to use linear tiled images for anything else than copying from host to GPU if buffer copies are not an option.
 			Linear tiling is thus only implemented for learning purposes, one should always prefer optimal tiled image.
 
-		Optimal tiled images:
+		Optimal tiled images:(!!!!!!Use This!!!!!)
 			These are stored in an implementation specific layout matching the capability of the hardware. They usually support more formats and features and are much faster.
 			Optimal tiled images are stored on the device and not accessible by the host. So they can't be written directly to (like liner tiled images) and always require
 			some sort of data copy, either from a buffer or	a linear tiled image.
@@ -151,7 +151,7 @@ public:
 		texture.width = ktxTexture->baseWidth;
 		texture.height = ktxTexture->baseHeight;
 		texture.mipLevels = ktxTexture->numLevels;
-		ktx_uint8_t *ktxTextureData = ktxTexture_GetData(ktxTexture);
+		ktx_uint8_t *ktxTextureData = ktxTexture_GetData(ktxTexture);	// 实际的图像数据和尺寸
 		ktx_size_t ktxTextureSize = ktxTexture_GetSize(ktxTexture);
 
 		// We prefer using staging to copy the texture data to a device local optimal image
@@ -160,6 +160,7 @@ public:
 		// Only use linear tiling if forced
 		bool forceLinearTiling = false;
 		if (forceLinearTiling) {
+			// 检查着色器是否支持线性采样,不支持 就staging buffer
 			// Don't use linear if format is not supported for (linear) shader sampling
 			// Get device properties for the requested texture format
 			VkFormatProperties formatProperties;
@@ -574,7 +575,7 @@ public:
 				1,
 				VK_FORMAT_R32G32_SFLOAT,
 				offsetof(Vertex, uv));
-		// Location 1 : Vertex normal
+		// Location 2 : Vertex normal
 		vertices.attributeDescriptions[2] =
 			vks::initializers::vertexInputAttributeDescription(
 				VERTEX_BUFFER_BIND_ID,
@@ -627,9 +628,10 @@ public:
 			vks::initializers::descriptorSetLayoutCreateInfo(
 				setLayoutBindings.data(),
 				static_cast<uint32_t>(setLayoutBindings.size()));
-
+		
 		VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, &descriptorLayout, nullptr, &descriptorSetLayout));
 
+		// 同时创建了pipeline layout
 		VkPipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
 			vks::initializers::pipelineLayoutCreateInfo(
 				&descriptorSetLayout,
@@ -732,7 +734,7 @@ public:
 		VkGraphicsPipelineCreateInfo pipelineCreateInfo =
 			vks::initializers::pipelineCreateInfo(
 				pipelineLayout,
-				renderPass,
+				renderPass,                           
 				0);
 
 		pipelineCreateInfo.pVertexInputState = &vertices.inputState;
@@ -769,7 +771,7 @@ public:
 		uboVS.projection = camera.matrices.perspective;
 		uboVS.modelView = camera.matrices.view;
 		uboVS.viewPos = camera.viewPos;
-		memcpy(uniformBufferVS.mapped, &uboVS, sizeof(uboVS));
+		memcpy(uniformBufferVS.mapped, &uboVS, sizeof(uboVS));	// 对mapped内存写入数据, 会同步到GPU buffer中去
 	}
 
 	void prepare()
@@ -809,4 +811,24 @@ public:
 	}
 };
 
-VULKAN_EXAMPLE_MAIN()
+//VULKAN_EXAMPLE_MAIN()
+VulkanExample* vulkanExample;
+LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (vulkanExample != NULL)
+	{
+		vulkanExample->handleMessages(hWnd, uMsg, wParam, lParam);
+	}
+	return (DefWindowProc(hWnd, uMsg, wParam, lParam));
+}
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
+{
+	for (int32_t i = 0; i < __argc; i++) { VulkanExample::args.push_back(__argv[i]); };
+	vulkanExample = new VulkanExample();
+	vulkanExample->initVulkan();
+	vulkanExample->setupWindow(hInstance, WndProc);
+	vulkanExample->prepare();
+	vulkanExample->renderLoop();
+	delete(vulkanExample);
+	return 0;
+}

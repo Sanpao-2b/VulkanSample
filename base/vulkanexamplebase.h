@@ -525,5 +525,5 @@ int main(const int argc, const char *argv[])														\
 }
 #else
 #define VULKAN_EXAMPLE_MAIN()
-#endif
+#endif	 
 #endif

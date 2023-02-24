@@ -29,7 +29,7 @@ namespace vks
 		VkDescriptorBufferInfo descriptor;
 		VkDeviceSize size = 0;
 		VkDeviceSize alignment = 0;
-		void* mapped = nullptr;
+		void* mapped = nullptr;	// CPU¶ËÄÚ´æ
 		/** @brief Usage flags to be filled by external source at buffer creation (to query at some later point) */
 		VkBufferUsageFlags usageFlags;
 		/** @brief Memory property flags to be filled by external source at buffer creation (to query at some later point) */

@@ -1,9 +1,11 @@
 #version 450
 
+// 对应于vertexAttributeDescription
 layout (location = 0) in vec3 inPos;
 layout (location = 1) in vec2 inUV;
 layout (location = 2) in vec3 inNormal;
 
+// 对应于Descriptor Set 中的bindingDescriptor
 layout (binding = 0) uniform UBO 
 {
 	mat4 projection;
@@ -34,8 +36,10 @@ void main()
 
     vec4 pos = ubo.model * vec4(inPos, 1.0);
 	outNormal = mat3(inverse(transpose(ubo.model))) * inNormal;
+	
 	vec3 lightPos = vec3(0.0);
 	vec3 lPos = mat3(ubo.model) * lightPos.xyz;
+
     outLightVec = lPos - pos.xyz;
     outViewVec = ubo.viewPos.xyz - pos.xyz;		
 }

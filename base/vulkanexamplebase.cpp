@@ -237,6 +237,7 @@ VkPipelineShaderStageCreateInfo VulkanExampleBase::loadShader(std::string fileNa
 	return shaderStage;
 }
 
+// 真的游戏逻辑帧计算
 void VulkanExampleBase::nextFrame()
 {
 	auto tStart = std::chrono::high_resolution_clock::now();
@@ -246,22 +247,23 @@ void VulkanExampleBase::nextFrame()
 		viewChanged();
 	}
 
-	render();
+	render();	// 调用客户端实现的render()函数
 	frameCounter++;
 	auto tEnd = std::chrono::high_resolution_clock::now();
 #if (defined(VK_USE_PLATFORM_IOS_MVK) || (defined(VK_USE_PLATFORM_MACOS_MVK) && !defined(VK_EXAMPLE_XCODE_GENERATED)))
 	// SRS - Calculate tDiff as time between frames vs. rendering time for iOS/macOS displayLink-driven examples project
 	auto tDiff = std::chrono::duration<double, std::milli>(tEnd - tPrevEnd).count();
 #else
-	auto tDiff = std::chrono::duration<double, std::milli>(tEnd - tStart).count();
+	auto tDiff = std::chrono::duration<double, std::milli>(tEnd - tStart).count();	// 计算一帧所用时间
 #endif
-	frameTimer = (float)tDiff / 1000.0f;
-	camera.update(frameTimer);
+	frameTimer = (float)tDiff / 1000.0f;	// 毫秒->秒
+	camera.update(frameTimer);				// 更新相机位置
 	if (camera.moving())
 	{
+		// 相机移动则还需更新视角
 		viewUpdated = true;
 	}
-	// Convert to clamped timer value
+	// Convert to clamped timer value 这是动画相关需要用的变量
 	if (!paused)
 	{
 		timer += timerSpeed * frameTimer;
@@ -270,10 +272,13 @@ void VulkanExampleBase::nextFrame()
 			timer -= 1.0f;
 		}
 	}
+
+	// 计算帧率
+	// fpsTimer:一帧的计算时间
 	float fpsTimer = (float)(std::chrono::duration<double, std::milli>(tEnd - lastTimestamp).count());
 	if (fpsTimer > 1000.0f)
 	{
-		lastFPS = static_cast<uint32_t>((float)frameCounter * (1000.0f / fpsTimer));
+		lastFPS = static_cast<uint32_t>((float)frameCounter * (1000.0f / fpsTimer));	// 帧数/s
 #if defined(_WIN32)
 		if (!settings.overlay)	{
 			std::string windowTitle = getWindowTitle();
@@ -659,16 +664,19 @@ void VulkanExampleBase::renderLoop()
 	}
 }
 
+// 每一帧更新overlay UI层
 void VulkanExampleBase::updateOverlay()
 {
 	if (!settings.overlay)
 		return;
 
+	// 获取 ImGui 的 IO 对象，后续将使用这个对象来更新鼠标位置、按键状态等信息。
 	ImGuiIO& io = ImGui::GetIO();
 
 	io.DisplaySize = ImVec2((float)width, (float)height);
 	io.DeltaTime = frameTimer;
 
+	// 将鼠标位置、鼠标左右中键的状态传递给 ImGui 的 IO 对象，用于更新 Overlay 界面。
 	io.MousePos = ImVec2(mousePos.x, mousePos.y);
 	io.MouseDown[0] = mouseButtons.left && UIOverlay.visible;
 	io.MouseDown[1] = mouseButtons.right && UIOverlay.visible;
@@ -676,10 +684,13 @@ void VulkanExampleBase::updateOverlay()
 
 	ImGui::NewFrame();
 
+	// 设置 ImGui 窗口的一些属性，包括窗口圆角、窗口位置、窗口大小等。
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 	ImGui::SetNextWindowPos(ImVec2(10 * UIOverlay.scale, 10 * UIOverlay.scale));
 	ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
 	ImGui::Begin("Vulkan Example", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+
+	// 向 ImGui 窗口中添加文本信息，包括程序的标题、当前使用的 GPU 设备名称以及每帧的耗时和帧率等信息。
 	ImGui::TextUnformatted(title.c_str());
 	ImGui::TextUnformatted(deviceProperties.deviceName);
 	ImGui::Text("%.2f ms/frame (%.1d fps)", (1000.0f / lastFPS), lastFPS);
@@ -687,6 +698,7 @@ void VulkanExampleBase::updateOverlay()
 #if defined(VK_USE_PLATFORM_ANDROID_KHR)
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 5.0f * UIOverlay.scale));
 #endif
+	// 在 ImGui 窗口中添加 Overlay 界面需要的各种控件，比如图表、按钮等。
 	ImGui::PushItemWidth(110.0f * UIOverlay.scale);
 	OnUpdateUIOverlay(&UIOverlay);
 	ImGui::PopItemWidth();
@@ -698,6 +710,7 @@ void VulkanExampleBase::updateOverlay()
 	ImGui::PopStyleVar();
 	ImGui::Render();
 
+	// 如果 Overlay 界面有更新，则重新构建 Vulkan 命令缓冲区，保证界面的更新能够正常显示。
 	if (UIOverlay.update() || UIOverlay.updated) {
 		buildCommandBuffers();
 		UIOverlay.updated = false;

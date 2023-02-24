@@ -413,9 +413,9 @@ namespace vks
 		// If a pointer to the buffer data has been passed, map the buffer and copy over the data
 		if (data != nullptr)
 		{
-			VK_CHECK_RESULT(buffer->map());
-			memcpy(buffer->mapped, data, size);
-			if ((memoryPropertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) == 0)
+			VK_CHECK_RESULT(buffer->map());		// 将显存上的buffer映射到CPU端内存
+			memcpy(buffer->mapped, data, size);// 将数据data 拷贝到buffer.mapped的同时, 也就映射到了显存的buffer中(支持主机一致性的情况下)
+			if ((memoryPropertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) == 0)	// 如果这段显存buffer不支持主机访问这个特性, 则需要手动刷新才能映射到GPU
 				buffer->flush();
 
 			buffer->unmap();
