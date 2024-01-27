@@ -200,7 +200,7 @@ public:
 		}
 	}
 
-	// ÁÙÊ±commandbuffer, ÓÃÓÚ¼ÇÂ¼ÉÙÁ¿ÐèÒªGPUÁ¢¼´Ö´ÐÐµÄÖ¸Áî ÐèÒªÅäºÏflushCommandbuffer()º¯Êý
+	// ï¿½ï¿½Ê±commandbuffer, ï¿½ï¿½ï¿½Ú¼ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÒªGPUï¿½ï¿½ï¿½ï¿½Ö´ï¿½Ðµï¿½Ö¸ï¿½ï¿½ ï¿½ï¿½Òªï¿½ï¿½ï¿½flushCommandbuffer()ï¿½ï¿½ï¿½ï¿½
 	// Get a new command buffer from the command pool
 	// If begin is true, the command buffer is also started so we can start adding commands
 	VkCommandBuffer getCommandBuffer(bool begin)
@@ -225,7 +225,7 @@ public:
 		return cmdBuffer;
 	}
 
-	// ÅäºÏgetCommanBuffer()º¯Êý, Í£Ö¹¼ÇÂ¼+Ìá½»²Ù×÷
+	// ï¿½ï¿½ï¿½getCommanBuffer()ï¿½ï¿½ï¿½ï¿½, Í£Ö¹ï¿½ï¿½Â¼+ï¿½á½»ï¿½ï¿½ï¿½ï¿½
 	// End the command buffer and submit it to the queue
 	// Uses a fence to ensure command buffer has finished executing before deleting it
 	void flushCommandBuffer(VkCommandBuffer commandBuffer)
@@ -334,7 +334,7 @@ public:
 		}
 	}
 
-	// »ñÈ¡Í¼Ïñ, Ìá½»Ö¸Áî»º³å¶ÔÏó, present
+	// ï¿½ï¿½È¡Í¼ï¿½ï¿½, ï¿½á½»Ö¸ï¿½î»ºï¿½ï¿½ï¿½ï¿½ï¿½, present
 	void draw()
 	{
 #if defined(VK_USE_PLATFORM_MACOS_MVK)
@@ -346,9 +346,9 @@ public:
 		VK_CHECK_RESULT(vkWaitForFences(device, 1, &waitFences[currentBuffer], VK_TRUE, UINT64_MAX));
 		VK_CHECK_RESULT(vkResetFences(device, 1, &waitFences[currentBuffer]));
 #else
-		// step1. »ñÈ¡Í¼Ïñ
+		// step1. ï¿½ï¿½È¡Í¼ï¿½ï¿½
 		// SRS - on other platforms use original bare code with local semaphores/fences for illustrative purposes
-		// Get next image in the swap chain (back/front buffer)     ÎªÊ²Ã´ÕâÀï²»ÓÃimageAvailableSemaphore?
+		// Get next image in the swap chain (back/front buffer)     ÎªÊ²Ã´ï¿½ï¿½ï¿½ï²»ï¿½ï¿½imageAvailableSemaphore?
 		VkResult acquire = swapChain.acquireNextImage(presentCompleteSemaphore, &currentBuffer);
 		if (!((acquire == VK_SUCCESS) || (acquire == VK_SUBOPTIMAL_KHR))) {
 			VK_CHECK_RESULT(acquire);
@@ -359,7 +359,7 @@ public:
 		VK_CHECK_RESULT(vkResetFences(device, 1, &queueCompleteFences[currentBuffer]));
 #endif
 
-		// step2. Ìá½»Ö¸Áî»º³å¶ÔÏó
+		// step2. ï¿½á½»Ö¸ï¿½î»ºï¿½ï¿½ï¿½ï¿½ï¿½
 		// Pipeline stage at which the queue submission will wait (via pWaitSemaphores)
 		VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		// The submit info structure specifies a command buffer queue submission batch
@@ -389,7 +389,7 @@ public:
 		// Submit to the graphics queue passing a wait fence
 		VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, queueCompleteFences[currentBuffer]));
 
-		// ³ÊÏÖÍ¼Ïñµ½ÊÓ¿Ú
+		// ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½Ó¿ï¿½
 		// Present the current buffer to the swap chain
 		// Pass the semaphore signaled by the command buffer submission from the submit info as the wait semaphore for swap chain presentation
 		// This ensures that the image is not presented to the windowing system until all commands have been submitted
@@ -1085,7 +1085,7 @@ public:
 		updateUniformBuffers();
 	}
 
-	// call whenÊÓ½Ç·¢Éú±ä»»Ê±
+	// call whenï¿½Ó½Ç·ï¿½ï¿½ï¿½ï¿½ä»»Ê±
 	void updateUniformBuffers()
 	{
 		// Pass matrices to the shaders
@@ -1120,7 +1120,7 @@ public:
 	{
 		if (!prepared)
 			return;
-		draw(); // »æÖÆÍ¼Ïñ
+		draw(); // ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½
 	}
 
 	virtual void viewChanged()

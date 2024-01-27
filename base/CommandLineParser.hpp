@@ -26,11 +26,11 @@ public:
 
 	void add(std::string name, std::vector<std::string> commands, bool hasValue, std::string help)
 	{
-		options[name].commands = commands;
-		options[name].help = help;
-		options[name].set = false;
-		options[name].hasValue = hasValue;
-		options[name].value = "";
+		options[name].commands = commands;	// name选项对应的命令，即使用该选项时需要输入的命令字符串（用数组存放是因为一种选项 可以用多种命令来指定如help 可以用-h --help）
+		options[name].help = help;			// 选项的帮助信息，用于在用户需要帮助时 提供对该选项的解释
+		options[name].set = false;			// set 被初始化为 false，表示该选项在解析命令行参数之前还没有被设置过
+		options[name].hasValue = hasValue;	// 该选项是否需要一个值 比如 -w1080 就需要指定一个值
+		options[name].value = "";			// 如果需要传入值，这个值的内容
 	}
 
 	void printHelp()
@@ -53,18 +53,18 @@ public:
 	{
 		bool printHelp = false;
 		// Known arguments
-		for (auto& option : options) {
-			for (auto& command : option.second.commands) {
-				for (size_t i = 0; i < arguments.size(); i++) {
-					if (strcmp(arguments[i], command.c_str()) == 0) {
-						option.second.set = true;
+		for (auto& option : options) {// 对于每一个选项（如选项help）
+			for (auto& command : option.second.commands) {// 对于每一种命令（-h --help)
+				for (size_t i = 0; i < arguments.size(); i++) {// 对于每一个传入的参数
+					if (strcmp(arguments[i], command.c_str()) == 0) {// 如果传入参数与选项的其中一个命令一致
+						option.second.set = true;// 将选项标记为已设置
 						// Get value
-						if (option.second.hasValue) {
-							if (arguments.size() > i + 1) {
-								option.second.value = arguments[i + 1];
+						if (option.second.hasValue) {// 如果该选项需要参数值
+							if (arguments.size() > i + 1) {// 如果用户输入了参数值
+								option.second.value = arguments[i + 1];// 将参数值设置为选项的值
 							}
-							if (option.second.value == "") {
-								printHelp = true;
+							if (option.second.value == "") {// 如果用户没有输入参数值
+								printHelp = true;// 设置需要打印帮助信息
 								break;
 							}
 						}

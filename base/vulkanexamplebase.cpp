@@ -237,7 +237,7 @@ VkPipelineShaderStageCreateInfo VulkanExampleBase::loadShader(std::string fileNa
 	return shaderStage;
 }
 
-// ÕæµÄÓÎÏ·Âß¼­Ö¡¼ÆËã
+// ï¿½ï¿½ï¿½ï¿½ï¿½Ï·ï¿½ß¼ï¿½Ö¡ï¿½ï¿½ï¿½ï¿½
 void VulkanExampleBase::nextFrame()
 {
 	auto tStart = std::chrono::high_resolution_clock::now();
@@ -247,23 +247,23 @@ void VulkanExampleBase::nextFrame()
 		viewChanged();
 	}
 
-	render();	// µ÷ÓÃ¿Í»§¶ËÊµÏÖµÄrender()º¯Êý
+	render();	// ï¿½ï¿½ï¿½Ã¿Í»ï¿½ï¿½ï¿½Êµï¿½Öµï¿½render()ï¿½ï¿½ï¿½ï¿½
 	frameCounter++;
 	auto tEnd = std::chrono::high_resolution_clock::now();
 #if (defined(VK_USE_PLATFORM_IOS_MVK) || (defined(VK_USE_PLATFORM_MACOS_MVK) && !defined(VK_EXAMPLE_XCODE_GENERATED)))
 	// SRS - Calculate tDiff as time between frames vs. rendering time for iOS/macOS displayLink-driven examples project
 	auto tDiff = std::chrono::duration<double, std::milli>(tEnd - tPrevEnd).count();
 #else
-	auto tDiff = std::chrono::duration<double, std::milli>(tEnd - tStart).count();	// ¼ÆËãÒ»Ö¡ËùÓÃÊ±¼ä
+	auto tDiff = std::chrono::duration<double, std::milli>(tEnd - tStart).count();	// ï¿½ï¿½ï¿½ï¿½Ò»Ö¡ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
 #endif
-	frameTimer = (float)tDiff / 1000.0f;	// ºÁÃë->Ãë
-	camera.update(frameTimer);				// ¸üÐÂÏà»úÎ»ÖÃ
+	frameTimer = (float)tDiff / 1000.0f;	// ï¿½ï¿½ï¿½ï¿½->ï¿½ï¿½
+	camera.update(frameTimer);				// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
 	if (camera.moving())
 	{
-		// Ïà»úÒÆ¶¯Ôò»¹Ðè¸üÐÂÊÓ½Ç
+		// ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó½ï¿½
 		viewUpdated = true;
 	}
-	// Convert to clamped timer value ÕâÊÇ¶¯»­Ïà¹ØÐèÒªÓÃµÄ±äÁ¿
+	// Convert to clamped timer value ï¿½ï¿½ï¿½Ç¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ÃµÄ±ï¿½ï¿½ï¿½
 	if (!paused)
 	{
 		timer += timerSpeed * frameTimer;
@@ -273,12 +273,12 @@ void VulkanExampleBase::nextFrame()
 		}
 	}
 
-	// ¼ÆËãÖ¡ÂÊ
-	// fpsTimer:Ò»Ö¡µÄ¼ÆËãÊ±¼ä
+	// ï¿½ï¿½ï¿½ï¿½Ö¡ï¿½ï¿½
+	// fpsTimer:Ò»Ö¡ï¿½Ä¼ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
 	float fpsTimer = (float)(std::chrono::duration<double, std::milli>(tEnd - lastTimestamp).count());
 	if (fpsTimer > 1000.0f)
 	{
-		lastFPS = static_cast<uint32_t>((float)frameCounter * (1000.0f / fpsTimer));	// Ö¡Êý/s
+		lastFPS = static_cast<uint32_t>((float)frameCounter * (1000.0f / fpsTimer));	// Ö¡ï¿½ï¿½/s
 #if defined(_WIN32)
 		if (!settings.overlay)	{
 			std::string windowTitle = getWindowTitle();
@@ -664,19 +664,19 @@ void VulkanExampleBase::renderLoop()
 	}
 }
 
-// Ã¿Ò»Ö¡¸üÐÂoverlay UI²ã
+// Ã¿Ò»Ö¡ï¿½ï¿½ï¿½ï¿½overlay UIï¿½ï¿½
 void VulkanExampleBase::updateOverlay()
 {
 	if (!settings.overlay)
 		return;
 
-	// »ñÈ¡ ImGui µÄ IO ¶ÔÏó£¬ºóÐø½«Ê¹ÓÃÕâ¸ö¶ÔÏóÀ´¸üÐÂÊó±êÎ»ÖÃ¡¢°´¼ü×´Ì¬µÈÐÅÏ¢¡£
+	// ï¿½ï¿½È¡ ImGui ï¿½ï¿½ IO ï¿½ï¿½ï¿½ó£¬ºï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã¡ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½
 	ImGuiIO& io = ImGui::GetIO();
 
 	io.DisplaySize = ImVec2((float)width, (float)height);
 	io.DeltaTime = frameTimer;
 
-	// ½«Êó±êÎ»ÖÃ¡¢Êó±ê×óÓÒÖÐ¼üµÄ×´Ì¬´«µÝ¸ø ImGui µÄ IO ¶ÔÏó£¬ÓÃÓÚ¸üÐÂ Overlay ½çÃæ¡£
+	// ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¼ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½Ý¸ï¿½ ImGui ï¿½ï¿½ IO ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¸ï¿½ï¿½ï¿½ Overlay ï¿½ï¿½ï¿½æ¡£
 	io.MousePos = ImVec2(mousePos.x, mousePos.y);
 	io.MouseDown[0] = mouseButtons.left && UIOverlay.visible;
 	io.MouseDown[1] = mouseButtons.right && UIOverlay.visible;
@@ -684,13 +684,13 @@ void VulkanExampleBase::updateOverlay()
 
 	ImGui::NewFrame();
 
-	// ÉèÖÃ ImGui ´°¿ÚµÄÒ»Ð©ÊôÐÔ£¬°üÀ¨´°¿ÚÔ²½Ç¡¢´°¿ÚÎ»ÖÃ¡¢´°¿Ú´óÐ¡µÈ¡£
+	// ï¿½ï¿½ï¿½ï¿½ ImGui ï¿½ï¿½ï¿½Úµï¿½Ò»Ð©ï¿½ï¿½ï¿½Ô£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô²ï¿½Ç¡ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã¡ï¿½ï¿½ï¿½ï¿½Ú´ï¿½Ð¡ï¿½È¡ï¿½
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 	ImGui::SetNextWindowPos(ImVec2(10 * UIOverlay.scale, 10 * UIOverlay.scale));
 	ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
 	ImGui::Begin("Vulkan Example", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-	// Ïò ImGui ´°¿ÚÖÐÌí¼ÓÎÄ±¾ÐÅÏ¢£¬°üÀ¨³ÌÐòµÄ±êÌâ¡¢µ±Ç°Ê¹ÓÃµÄ GPU Éè±¸Ãû³ÆÒÔ¼°Ã¿Ö¡µÄºÄÊ±ºÍÖ¡ÂÊµÈÐÅÏ¢¡£
+	// ï¿½ï¿½ ImGui ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½â¡¢ï¿½ï¿½Ç°Ê¹ï¿½Ãµï¿½ GPU ï¿½è±¸ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½Ã¿Ö¡ï¿½Äºï¿½Ê±ï¿½ï¿½Ö¡ï¿½Êµï¿½ï¿½ï¿½Ï¢ï¿½ï¿½
 	ImGui::TextUnformatted(title.c_str());
 	ImGui::TextUnformatted(deviceProperties.deviceName);
 	ImGui::Text("%.2f ms/frame (%.1d fps)", (1000.0f / lastFPS), lastFPS);
@@ -698,7 +698,7 @@ void VulkanExampleBase::updateOverlay()
 #if defined(VK_USE_PLATFORM_ANDROID_KHR)
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 5.0f * UIOverlay.scale));
 #endif
-	// ÔÚ ImGui ´°¿ÚÖÐÌí¼Ó Overlay ½çÃæÐèÒªµÄ¸÷ÖÖ¿Ø¼þ£¬±ÈÈçÍ¼±í¡¢°´Å¥µÈ¡£
+	// ï¿½ï¿½ ImGui ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Overlay ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½Ä¸ï¿½ï¿½Ö¿Ø¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½Å¥ï¿½È¡ï¿½
 	ImGui::PushItemWidth(110.0f * UIOverlay.scale);
 	OnUpdateUIOverlay(&UIOverlay);
 	ImGui::PopItemWidth();
@@ -710,7 +710,7 @@ void VulkanExampleBase::updateOverlay()
 	ImGui::PopStyleVar();
 	ImGui::Render();
 
-	// Èç¹û Overlay ½çÃæÓÐ¸üÐÂ£¬ÔòÖØÐÂ¹¹½¨ Vulkan ÃüÁî»º³åÇø£¬±£Ö¤½çÃæµÄ¸üÐÂÄÜ¹»Õý³£ÏÔÊ¾¡£
+	// ï¿½ï¿½ï¿½ Overlay ï¿½ï¿½ï¿½ï¿½ï¿½Ð¸ï¿½ï¿½Â£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¹ï¿½ï¿½ï¿½ Vulkan ï¿½ï¿½ï¿½î»ºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½ï¿½Ü¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½
 	if (UIOverlay.update() || UIOverlay.updated) {
 		buildCommandBuffers();
 		UIOverlay.updated = false;

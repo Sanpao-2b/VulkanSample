@@ -151,7 +151,7 @@ public:
 		texture.width = ktxTexture->baseWidth;
 		texture.height = ktxTexture->baseHeight;
 		texture.mipLevels = ktxTexture->numLevels;
-		ktx_uint8_t *ktxTextureData = ktxTexture_GetData(ktxTexture);	// Êµ¼ÊµÄÍ¼ÏñÊý¾ÝºÍ³ß´ç
+		ktx_uint8_t *ktxTextureData = ktxTexture_GetData(ktxTexture);	// Êµï¿½Êµï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ÝºÍ³ß´ï¿½
 		ktx_size_t ktxTextureSize = ktxTexture_GetSize(ktxTexture);
 
 		// We prefer using staging to copy the texture data to a device local optimal image
@@ -160,7 +160,7 @@ public:
 		// Only use linear tiling if forced
 		bool forceLinearTiling = false;
 		if (forceLinearTiling) {
-			// ¼ì²é×ÅÉ«Æ÷ÊÇ·ñÖ§³ÖÏßÐÔ²ÉÑù,²»Ö§³Ö ¾Ístaging buffer
+			// ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½Ç·ï¿½Ö§ï¿½ï¿½ï¿½ï¿½ï¿½Ô²ï¿½ï¿½ï¿½,ï¿½ï¿½Ö§ï¿½ï¿½ ï¿½ï¿½staging buffer
 			// Don't use linear if format is not supported for (linear) shader sampling
 			// Get device properties for the requested texture format
 			VkFormatProperties formatProperties;
@@ -631,7 +631,7 @@ public:
 		
 		VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, &descriptorLayout, nullptr, &descriptorSetLayout));
 
-		// Í¬Ê±´´½¨ÁËpipeline layout
+		// Í¬Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½pipeline layout
 		VkPipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
 			vks::initializers::pipelineLayoutCreateInfo(
 				&descriptorSetLayout,
@@ -771,7 +771,7 @@ public:
 		uboVS.projection = camera.matrices.perspective;
 		uboVS.modelView = camera.matrices.view;
 		uboVS.viewPos = camera.viewPos;
-		memcpy(uniformBufferVS.mapped, &uboVS, sizeof(uboVS));	// ¶ÔmappedÄÚ´æÐ´ÈëÊý¾Ý, »áÍ¬²½µ½GPU bufferÖÐÈ¥
+		memcpy(uniformBufferVS.mapped, &uboVS, sizeof(uboVS));	// ï¿½ï¿½mappedï¿½Ú´ï¿½Ð´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Í¬ï¿½ï¿½ï¿½ï¿½GPU bufferï¿½ï¿½È¥
 	}
 
 	void prepare()
