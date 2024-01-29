@@ -70,6 +70,8 @@ namespace vkglTF
 
 	/*
 		glTF material class
+		一个材质对象，代表着一组纹理图像和一些调整外观表现的系数（如金属度、不透明度、粗糙度）
+		最重要的是：一个描述符集（管理所有纹理图像）
 	*/
 	struct Material {
 		vks::VulkanDevice* device = nullptr;
