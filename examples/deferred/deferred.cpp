@@ -63,6 +63,7 @@ public:
 		vks::Buffer composition;
 	} uniformBuffers;
 
+	// 两个pipeline，第一个Gbuffer，第二个是延迟渲染
 	struct {
 		VkPipeline offscreen;
 		VkPipeline composition;
@@ -271,6 +272,7 @@ public:
 			VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
 			&offScreenFrameBuf.depth);
 
+		// 因为用到的附件是不同的，所以需要单独的subpass来渲染到G-Buffer中
 		// Set up separate renderpass with references to the color and depth attachments
 		std::array<VkAttachmentDescription, 4> attachmentDescs = {};
 
@@ -282,7 +284,7 @@ public:
 			attachmentDescs[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 			attachmentDescs[i].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 			attachmentDescs[i].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-			if (i == 3)
+			if (i == 3)	// 第4个放深度模板附件
 			{
 				attachmentDescs[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 				attachmentDescs[i].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
@@ -386,7 +388,7 @@ public:
 			offScreenCmdBuffer = vulkanDevice->createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, false);
 		}
 
-		// Create a semaphore used to synchronize offscreen rendering and usage
+		// Create a semaphore used to synchronize offscreen rendering and usage	// GPU必须等offscreen的所有颜色附件都写入完毕，才能开始composite阶段
 		VkSemaphoreCreateInfo semaphoreCreateInfo = vks::initializers::semaphoreCreateInfo();
 		VK_CHECK_RESULT(vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr, &offscreenSemaphore));
 
@@ -419,6 +421,7 @@ public:
 
 		vkCmdBindPipeline(offScreenCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines.offscreen);
 
+		// offscreen阶段绑定了两个set
 		// Background
 		vkCmdBindDescriptorSets(offScreenCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets.floor, 0, nullptr);
 		models.floor.draw(offScreenCmdBuffer);
@@ -503,10 +506,10 @@ public:
 
 	void setupDescriptorSetLayout()
 	{
-		// Deferred shading layout
+		// Deferred shading layout (描述绑定点个数，绑定点描述符类型）
 		std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings = {
 			// Binding 0 : Vertex shader uniform buffer
-			vks::initializers::descriptorSetLayoutBinding( VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 0),
+			vks::initializers::descriptorSetLayoutBinding( VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 0 /*, 参数4：描述符数组元素个数，默认1*/ ),
 			// Binding 1 : Position texture target / Scene colormap
 			vks::initializers::descriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1),
 			// Binding 2 : Normals texture target
@@ -520,7 +523,7 @@ public:
 		VkDescriptorSetLayoutCreateInfo descriptorLayout = vks::initializers::descriptorSetLayoutCreateInfo(setLayoutBindings);
 		VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, &descriptorLayout, nullptr, &descriptorSetLayout));
 
-		// Shared pipeline layout used by all pipelines
+		// Shared pipeline layout used by all pipelines（一般来说pipelineLayout都是跟DescriptorSetLayout一起创建，因为要用到）
 		VkPipelineLayoutCreateInfo pPipelineLayoutCreateInfo = vks::initializers::pipelineLayoutCreateInfo(&descriptorSetLayout, 1);
 		VK_CHECK_RESULT(vkCreatePipelineLayout(device, &pPipelineLayoutCreateInfo, nullptr, &pipelineLayout));
 	}
@@ -549,7 +552,9 @@ public:
 				offScreenFrameBuf.albedo.view,
 				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-		// Deferred composition
+		// 我们用到了3个set，分别用于渲染不同的物体或阶段
+		
+		// Deferred composition —— 这是一个全局descriptorSet用于光照合成计算 计算到swapchain图像上的
 		VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet));
 		writeDescriptorSets = {
 			// Binding 1 : Position texture target
@@ -565,7 +570,7 @@ public:
 
 		// Offscreen (scene)
 
-		// Model
+		// Model ———— descriptorSets.model用于模型渲染到G-Buffers
 		VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &descriptorSets.model));
 		writeDescriptorSets = {
 			// Binding 0: Vertex shader uniform buffer
@@ -577,7 +582,7 @@ public:
 		};
 		vkUpdateDescriptorSets(device, static_cast<uint32_t>(writeDescriptorSets.size()), writeDescriptorSets.data(), 0, nullptr);
 
-		// Background
+		// Background ———— descriptorSets.floor场景渲染，也是渲染到G—Buffers
 		VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &descriptorSets.floor));
 		writeDescriptorSets = {
 			// Binding 0: Vertex shader uniform buffer
@@ -603,6 +608,7 @@ public:
 		VkPipelineDynamicStateCreateInfo dynamicState = vks::initializers::pipelineDynamicStateCreateInfo(dynamicStateEnables);
 		std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages;
 
+		// 这里有一个全局renderpass，渲染到屏幕的！
 		VkGraphicsPipelineCreateInfo pipelineCI = vks::initializers::pipelineCreateInfo(pipelineLayout, renderPass);
 		pipelineCI.pInputAssemblyState = &inputAssemblyState;
 		pipelineCI.pRasterizationState = &rasterizationState;
@@ -614,29 +620,28 @@ public:
 		pipelineCI.stageCount = static_cast<uint32_t>(shaderStages.size());
 		pipelineCI.pStages = shaderStages.data();
 
-		// Final fullscreen composition pass pipeline
-		rasterizationState.cullMode = VK_CULL_MODE_FRONT_BIT;
+		// 第二个pipeline：Final fullscreen composition pass pipeline
+		rasterizationState.cullMode = VK_CULL_MODE_FRONT_BIT;	// 
 		shaderStages[0] = loadShader(getShadersPath() + "deferred/deferred.vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
 		shaderStages[1] = loadShader(getShadersPath() + "deferred/deferred.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
-		// Empty vertex input state, vertices are generated by the vertex shader
+		// 延迟渲染阶段并不需要顶点输入，只是一个全屏的quad，用顶点着色器生成
 		VkPipelineVertexInputStateCreateInfo emptyInputState = vks::initializers::pipelineVertexInputStateCreateInfo();
 		pipelineCI.pVertexInputState = &emptyInputState;
 		VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, &pipelineCI, nullptr, &pipelines.composition));
 
-		// Vertex input state from glTF model for pipeline rendering models
+		//  第一个pipeline：Offscreen pipeline
 		pipelineCI.pVertexInputState = vkglTF::Vertex::getPipelineVertexInputState({vkglTF::VertexComponent::Position, vkglTF::VertexComponent::UV, vkglTF::VertexComponent::Color, vkglTF::VertexComponent::Normal, vkglTF::VertexComponent::Tangent});
 		rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;
 
-		// Offscreen pipeline
 		shaderStages[0] = loadShader(getShadersPath() + "deferred/mrt.vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
 		shaderStages[1] = loadShader(getShadersPath() + "deferred/mrt.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
 
-		// Separate render pass
+		// Separate render pass（模型加载时，创建的renderpass，它只有一个subpass）
 		pipelineCI.renderPass = offScreenFrameBuf.renderPass;
 
 		// Blend attachment states required for all color attachments
 		// This is important, as color write mask will otherwise be 0x0 and you
-		// won't see anything rendered to the attachment
+		// won't see anything rendered to the attachment 确保颜色混合附件的颜色写入设置为启用
 		std::array<VkPipelineColorBlendAttachmentState, 3> blendAttachmentStates = {
 			vks::initializers::pipelineColorBlendAttachmentState(0xf, VK_FALSE),
 			vks::initializers::pipelineColorBlendAttachmentState(0xf, VK_FALSE),
@@ -652,14 +657,14 @@ public:
 	// Prepare and initialize uniform buffer containing shader uniforms
 	void prepareUniformBuffers()
 	{
-		// Offscreen vertex shader
+		// Offscreen vertex shader阶段所需要的uniform buffer（MVP+实例位置）
 		VK_CHECK_RESULT(vulkanDevice->createBuffer(
 			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 		    &uniformBuffers.offscreen,
 			sizeof(uboOffscreenVS)));
 
-		// Deferred fragment shader
+		// Deferred fragment shader（延迟渲染阶段用到的光源位置、相机位置）
 		VK_CHECK_RESULT(vulkanDevice->createBuffer(
 			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
@@ -785,12 +790,12 @@ public:
 	{
 		VulkanExampleBase::prepare();
 		loadAssets();
-		prepareOffscreenFramebuffer();
+		prepareOffscreenFramebuffer();	// 创建了一个新的Framebuffer用于G-Buffers阶段，Composite用的是通用全局framebuffer（swapchain图像是唯一的附件）
 		prepareUniformBuffers();
 		setupDescriptorSetLayout();
-		preparePipelines();
-		setupDescriptorPool();
-		setupDescriptorSet();
+		preparePipelines();				// 两个pipeline，两个renderpass
+		setupDescriptorPool();		
+		setupDescriptorSet();			// 3个DescriptorSet 分别对应Model Floor Composite 阶段
 		buildCommandBuffers();
 		buildDeferredCommandBuffer();
 		prepared = true;

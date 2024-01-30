@@ -62,6 +62,7 @@ void vkglTF::Texture::destroy()
 	}
 }
 
+// 把glTF的图像转成vulkan的纹理图像（VkImage VkimageView VkMemoryAlloc)
 void vkglTF::Texture::fromglTfImage(tinygltf::Image &gltfimage, std::string path, vks::VulkanDevice *device, VkQueue copyQueue)
 {
 	this->device = device;
@@ -756,6 +757,7 @@ vkglTF::Model::~Model()
 	emptyTexture.destroy();
 }
 
+// 每个节点都是场景的一个元素，光源、相机、模型、子模型等等
 void vkglTF::Model::loadNode(vkglTF::Node *parent, const tinygltf::Node &node, uint32_t nodeIndex, const tinygltf::Model &model, std::vector<uint32_t>& indexBuffer, std::vector<Vertex>& vertexBuffer, float globalscale)
 {
 	vkglTF::Node *newNode = new Node{};
@@ -797,7 +799,7 @@ void vkglTF::Model::loadNode(vkglTF::Node *parent, const tinygltf::Node &node, u
 
 	// Node contains mesh data
 	if (node.mesh > -1) {
-		const tinygltf::Mesh mesh = model.meshes[node.mesh];
+		const tinygltf::Mesh mesh = model.meshes[node.mesh]; // 注意 实际存储数据的地方是Model类，其他Node啥的都只是存索引号
 		Mesh *newMesh = new Mesh(device, newNode->matrix);
 		newMesh->name = mesh.name;
 		for (size_t j = 0; j < mesh.primitives.size(); j++) {
@@ -1002,6 +1004,7 @@ void vkglTF::Model::loadImages(tinygltf::Model &gltfModel, vks::VulkanDevice *de
 
 void vkglTF::Model::loadMaterials(tinygltf::Model &gltfModel)
 {
+	// Model有多个Mesh，每个Mesh有1或n个材质
 	for (tinygltf::Material &mat : gltfModel.materials) {
 		vkglTF::Material material(device);
 		if (mat.values.find("baseColorTexture") != mat.values.end()) {
@@ -1034,12 +1037,13 @@ void vkglTF::Model::loadMaterials(tinygltf::Model &gltfModel)
 		if (mat.additionalValues.find("alphaMode") != mat.additionalValues.end()) {
 			tinygltf::Parameter param = mat.additionalValues["alphaMode"];
 			if (param.string_value == "BLEND") {
-				material.alphaMode = Material::ALPHAMODE_BLEND;
+				material.alphaMode = Material::ALPHAMODE_BLEND;	// 混合背景图
 			}
 			if (param.string_value == "MASK") {
-				material.alphaMode = Material::ALPHAMODE_MASK;
+				material.alphaMode = Material::ALPHAMODE_MASK;	// 扣掉该物体上alpha低于某个阈值的部分
 			}
 		}
+		// alpha阈值，低于该阈值的如果在MASK混合模式，就会被裁剪
 		if (mat.additionalValues.find("alphaCutoff") != mat.additionalValues.end()) {
 			material.alphaCutoff = static_cast<float>(mat.additionalValues["alphaCutoff"].Factor());
 		}
@@ -1166,8 +1170,10 @@ void vkglTF::Model::loadAnimations(tinygltf::Model &gltfModel)
 
 void vkglTF::Model::loadFromFile(std::string filename, vks::VulkanDevice *device, VkQueue transferQueue, uint32_t fileLoadingFlags, float scale)
 {
+	// 使用 tinygltf 库加载 glTF 模型
 	tinygltf::Model gltfModel;
 	tinygltf::TinyGLTF gltfContext;
+	// 设置加载图片的回调函数
 	if (fileLoadingFlags & FileLoadingFlags::DontLoadImages) {
 		gltfContext.SetImageLoader(loadImageDataFuncEmpty, nullptr);
 	} else {
@@ -1178,6 +1184,7 @@ void vkglTF::Model::loadFromFile(std::string filename, vks::VulkanDevice *device
 	// We let tinygltf handle this, by passing the asset manager of our app
 	tinygltf::asset_manager = androidApp->activity->assetManager;
 #endif
+	// 从文件名中提取路径信息
 	size_t pos = filename.find_last_of('/');
 	path = filename.substr(0, pos);
 
@@ -1190,21 +1197,27 @@ void vkglTF::Model::loadFromFile(std::string filename, vks::VulkanDevice *device
 	// We let tinygltf handle this, by passing the asset manager of our app
 	tinygltf::asset_manager = androidApp->activity->assetManager;
 #endif
+	// 通过 tinygltf 加载 glTF 模型文件
 	bool fileLoaded = gltfContext.LoadASCIIFromFile(&gltfModel, &error, &warning, filename);
 
+	// 创建索引缓冲和顶点缓冲
 	std::vector<uint32_t> indexBuffer;
 	std::vector<Vertex> vertexBuffer;
 
+	// 有些模型文件有材质、有纹理图，有些没有
 	if (fileLoaded) {
 		if (!(fileLoadingFlags & FileLoadingFlags::DontLoadImages)) {
 			loadImages(gltfModel, device, transferQueue);
 		}
 		loadMaterials(gltfModel);
+		
+		// 加载节点，把树状存储的节点改成线性存储
 		const tinygltf::Scene &scene = gltfModel.scenes[gltfModel.defaultScene > -1 ? gltfModel.defaultScene : 0];
 		for (size_t i = 0; i < scene.nodes.size(); i++) {
 			const tinygltf::Node node = gltfModel.nodes[scene.nodes[i]];
 			loadNode(nullptr, node, scene.nodes[i], gltfModel, indexBuffer, vertexBuffer, scale);
 		}
+		
 		if (gltfModel.animations.size() > 0) {
 			loadAnimations(gltfModel);
 		}
