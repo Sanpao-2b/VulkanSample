@@ -757,6 +757,7 @@ vkglTF::Model::~Model()
 	emptyTexture.destroy();
 }
 
+// 每个节点都是场景的一个元素，光源、相机、模型、子模型等等
 void vkglTF::Model::loadNode(vkglTF::Node *parent, const tinygltf::Node &node, uint32_t nodeIndex, const tinygltf::Model &model, std::vector<uint32_t>& indexBuffer, std::vector<Vertex>& vertexBuffer, float globalscale)
 {
 	vkglTF::Node *newNode = new Node{};
@@ -798,7 +799,7 @@ void vkglTF::Model::loadNode(vkglTF::Node *parent, const tinygltf::Node &node, u
 
 	// Node contains mesh data
 	if (node.mesh > -1) {
-		const tinygltf::Mesh mesh = model.meshes[node.mesh];
+		const tinygltf::Mesh mesh = model.meshes[node.mesh]; // 注意 实际存储数据的地方是Model类，其他Node啥的都只是存索引号
 		Mesh *newMesh = new Mesh(device, newNode->matrix);
 		newMesh->name = mesh.name;
 		for (size_t j = 0; j < mesh.primitives.size(); j++) {
@@ -1209,11 +1210,14 @@ void vkglTF::Model::loadFromFile(std::string filename, vks::VulkanDevice *device
 			loadImages(gltfModel, device, transferQueue);
 		}
 		loadMaterials(gltfModel);
+		
+		// 加载节点，把树状存储的节点改成线性存储
 		const tinygltf::Scene &scene = gltfModel.scenes[gltfModel.defaultScene > -1 ? gltfModel.defaultScene : 0];
 		for (size_t i = 0; i < scene.nodes.size(); i++) {
 			const tinygltf::Node node = gltfModel.nodes[scene.nodes[i]];
 			loadNode(nullptr, node, scene.nodes[i], gltfModel, indexBuffer, vertexBuffer, scale);
 		}
+		
 		if (gltfModel.animations.size() > 0) {
 			loadAnimations(gltfModel);
 		}

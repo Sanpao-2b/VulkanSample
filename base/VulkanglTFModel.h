@@ -130,7 +130,7 @@ namespace vkglTF
 		struct UniformBuffer {
 			VkBuffer buffer;
 			VkDeviceMemory memory;
-			VkDescriptorBufferInfo descriptor;
+			VkDescriptorBufferInfo descriptor;	// 在与set绑定时要用的
 			VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
 			void* mapped;
 		} uniformBuffer;
@@ -157,6 +157,8 @@ namespace vkglTF
 
 	/*
 		glTF node
+		Scene是一个场景中所有结点的代表，场景中大部分元素都有层次关系，因此用树状结构存储，方便更新和同时变换
+		既然模型是在3D软件中制作好的，那么每个节点自然也有它默认Transform
 	*/
 	struct Node {
 		Node* parent;
@@ -247,6 +249,7 @@ namespace vkglTF
 
 	/*
 		glTF model loading and rendering class
+		注意glTF::Model这个结构才是实际存储所有模型相关资产的地方，其他的诸如Node、Material等都只是存与其相关联的资源索引号
 	*/
 	class Model {
 	private:

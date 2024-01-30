@@ -132,7 +132,7 @@ protected:
 	VkSubmitInfo submitInfo;
 	// Command buffers used for rendering
 	std::vector<VkCommandBuffer> drawCmdBuffers;
-	// Global render pass for frame buffer writes
+	// Global render pass for frame buffer writes	// 全局renderpass，只有一个color附件，就是swapchain的图像视图
 	VkRenderPass renderPass = VK_NULL_HANDLE;
 	// List of available frame buffers (same as number of swap chain images)
 	std::vector<VkFramebuffer>frameBuffers;
