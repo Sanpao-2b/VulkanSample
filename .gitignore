@@ -234,3 +234,4 @@ data/textures/**
 data/README_asset_pack.md
 data/font*.*
 data/roboto*.*
+/vulkan_asset_pack_gltf/data
