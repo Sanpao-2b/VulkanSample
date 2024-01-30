@@ -334,7 +334,6 @@ public:
 		}
 	}
 
-	// ��ȡͼ��, �ύָ������, present
 	void draw()
 	{
 #if defined(VK_USE_PLATFORM_MACOS_MVK)
@@ -346,9 +345,8 @@ public:
 		VK_CHECK_RESULT(vkWaitForFences(device, 1, &waitFences[currentBuffer], VK_TRUE, UINT64_MAX));
 		VK_CHECK_RESULT(vkResetFences(device, 1, &waitFences[currentBuffer]));
 #else
-		// step1. ��ȡͼ��
 		// SRS - on other platforms use original bare code with local semaphores/fences for illustrative purposes
-		// Get next image in the swap chain (back/front buffer)     Ϊʲô���ﲻ��imageAvailableSemaphore?
+		// Get next image in the swap chain (back/front buffer) 
 		VkResult acquire = swapChain.acquireNextImage(presentCompleteSemaphore, &currentBuffer);
 		if (!((acquire == VK_SUCCESS) || (acquire == VK_SUBOPTIMAL_KHR))) {
 			VK_CHECK_RESULT(acquire);
@@ -359,7 +357,6 @@ public:
 		VK_CHECK_RESULT(vkResetFences(device, 1, &queueCompleteFences[currentBuffer]));
 #endif
 
-		// step2. �ύָ������
 		// Pipeline stage at which the queue submission will wait (via pWaitSemaphores)
 		VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		// The submit info structure specifies a command buffer queue submission batch
@@ -389,7 +386,6 @@ public:
 		// Submit to the graphics queue passing a wait fence
 		VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, queueCompleteFences[currentBuffer]));
 
-		// ����ͼ���ӿ�
 		// Present the current buffer to the swap chain
 		// Pass the semaphore signaled by the command buffer submission from the submit info as the wait semaphore for swap chain presentation
 		// This ensures that the image is not presented to the windowing system until all commands have been submitted
@@ -1120,7 +1116,7 @@ public:
 	{
 		if (!prepared)
 			return;
-		draw(); // ����ͼ��
+		draw();
 	}
 
 	virtual void viewChanged()
