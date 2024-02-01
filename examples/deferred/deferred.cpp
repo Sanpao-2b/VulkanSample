@@ -82,9 +82,10 @@ public:
 	struct FrameBufferAttachment {
 		VkImage image;
 		VkDeviceMemory mem;
-		VkImageView view;
+		VkImageView view;	// 附件只用这玩意儿
 		VkFormat format;
 	};
+	// 第二个framebuffer，用于offscreen阶段
 	struct FrameBuffer {
 		int32_t width, height;
 		VkFramebuffer frameBuffer;
@@ -261,7 +262,7 @@ public:
 			&offScreenFrameBuf.albedo);
 
 		// Depth attachment
-
+		
 		// Find a suitable depth format
 		VkFormat attDepthFormat;
 		VkBool32 validDepthFormat = vks::tools::getSupportedDepthFormat(physicalDevice, &attDepthFormat);
@@ -272,7 +273,6 @@ public:
 			VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
 			&offScreenFrameBuf.depth);
 
-		// 因为用到的附件是不同的，所以需要单独的subpass来渲染到G-Buffer中
 		// Set up separate renderpass with references to the color and depth attachments
 		std::array<VkAttachmentDescription, 4> attachmentDescs = {};
 
@@ -388,7 +388,7 @@ public:
 			offScreenCmdBuffer = vulkanDevice->createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, false);
 		}
 
-		// Create a semaphore used to synchronize offscreen rendering and usage	// GPU必须等offscreen的所有颜色附件都写入完毕，才能开始composite阶段
+		// Create a semaphore used to synchronize offscreen rendering and usage	用于同步G-buffers的渲染完毕，与最终合成阶段对它的使用
 		VkSemaphoreCreateInfo semaphoreCreateInfo = vks::initializers::semaphoreCreateInfo();
 		VK_CHECK_RESULT(vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr, &offscreenSemaphore));
 
@@ -421,15 +421,15 @@ public:
 
 		vkCmdBindPipeline(offScreenCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines.offscreen);
 
-		// offscreen阶段绑定了两个set
+		// offscreen阶段绑定了两个set，毫无疑问嘛，因为两种不同的模型需要的描述符都不一样
 		// Background
 		vkCmdBindDescriptorSets(offScreenCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets.floor, 0, nullptr);
-		models.floor.draw(offScreenCmdBuffer);
+		models.floor.draw(offScreenCmdBuffer);	// 封装的VkCmd绘制指令
 
 		// Instanced object
 		vkCmdBindDescriptorSets(offScreenCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets.model, 0, nullptr);
-		models.model.bindBuffers(offScreenCmdBuffer);
-		vkCmdDrawIndexed(offScreenCmdBuffer, models.model.indices.count, 3, 0, 0, 0);
+		models.model.bindBuffers(offScreenCmdBuffer);	// VkCmdBindVertexBuffer 和 indexbuffer
+		vkCmdDrawIndexed(offScreenCmdBuffer, models.model.indices.count, 3, 0, 0, 0);	// 3个实例
 
 		vkCmdEndRenderPass(offScreenCmdBuffer);
 
@@ -552,7 +552,7 @@ public:
 				offScreenFrameBuf.albedo.view,
 				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-		// 我们用到了3个set，分别用于渲染不同的物体或阶段
+		// 我们用到了3个set，分别用于渲染不同的物体或阶段，因为3种不同类型的模型需要的描述符是不一样的（起码各自的纹理图像是不同的）
 		
 		// Deferred composition —— 这是一个全局descriptorSet用于光照合成计算 计算到swapchain图像上的
 		VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet));
@@ -582,7 +582,7 @@ public:
 		};
 		vkUpdateDescriptorSets(device, static_cast<uint32_t>(writeDescriptorSets.size()), writeDescriptorSets.data(), 0, nullptr);
 
-		// Background ———— descriptorSets.floor场景渲染，也是渲染到G—Buffers
+		// Background ———— descriptorSets.floor渲染，也是渲染到G—Buffers里
 		VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &descriptorSets.floor));
 		writeDescriptorSets = {
 			// Binding 0: Vertex shader uniform buffer
@@ -747,6 +747,7 @@ public:
 
 	void draw()
 	{
+		// 获取交换链图像，并检查是否跟窗口表面的尺寸匹配，不匹配则重建交换链
 		VulkanExampleBase::prepareFrame();
 
 		// The scene render command buffer has to wait for the offscreen
@@ -763,26 +764,27 @@ public:
 		// Offscreen rendering
 
 		// Wait for swap chain presentation to finish
-		submitInfo.pWaitSemaphores = &semaphores.presentComplete;
+		submitInfo.pWaitSemaphores = &semaphores.presentComplete;	// 等待上一帧呈现完毕
 		// Signal ready with offscreen semaphore
-		submitInfo.pSignalSemaphores = &offscreenSemaphore;
+		submitInfo.pSignalSemaphores = &offscreenSemaphore;			// 计算完成后（G-Buffers ready)，发出信号
 
 		// Submit work
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &offScreenCmdBuffer;
-		VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
+		VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));	// offsreen的commandBuffer提交
 
 		// Scene rendering
 
 		// Wait for offscreen semaphore
-		submitInfo.pWaitSemaphores = &offscreenSemaphore;
+		submitInfo.pWaitSemaphores = &offscreenSemaphore;			// 等待离屏阶段G-Buffers准备好
 		// Signal ready with render complete semaphore
-		submitInfo.pSignalSemaphores = &semaphores.renderComplete;
+		submitInfo.pSignalSemaphores = &semaphores.renderComplete;	// 渲染完毕，可以present了
 
 		// Submit work
 		submitInfo.pCommandBuffers = &drawCmdBuffers[currentBuffer];
-		VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
+		VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));	// 最终阶段的commandBuffer提交
 
+		// 做呈现，如果呈现失败，交换链与窗口尺寸不匹配，重建交换链
 		VulkanExampleBase::submitFrame();
 	}
 
@@ -791,13 +793,13 @@ public:
 		VulkanExampleBase::prepare();
 		loadAssets();
 		prepareOffscreenFramebuffer();	// 创建了一个新的Framebuffer用于G-Buffers阶段，Composite用的是通用全局framebuffer（swapchain图像是唯一的附件）
-		prepareUniformBuffers();
+		prepareUniformBuffers();		// 光源位置、MVP矩阵等等
 		setupDescriptorSetLayout();
 		preparePipelines();				// 两个pipeline，两个renderpass
 		setupDescriptorPool();		
 		setupDescriptorSet();			// 3个DescriptorSet 分别对应Model Floor Composite 阶段
-		buildCommandBuffers();
-		buildDeferredCommandBuffer();
+		buildCommandBuffers();			// 主命令缓冲区的命令记录（目标是swapchain framebuffer）
+		buildDeferredCommandBuffer();	// deffered阶段的命令记录（用的另一个命令缓冲区）
 		prepared = true;
 	}
 

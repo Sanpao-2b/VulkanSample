@@ -15,7 +15,7 @@ const std::string getAssetPath()
 #if defined(VK_USE_PLATFORM_ANDROID_KHR)
 	return "";
 #elif defined(VK_EXAMPLE_DATA_DIR)
-	return VK_EXAMPLE_DATA_DIR;
+	return VK_EXAMPLE_DATA_DIR;	// cmakelists和项目属性里面定义的
 #else
 	return "./../data/";
 #endif

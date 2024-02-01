@@ -271,7 +271,7 @@ public:
 	}
 
 	// Override render pass setup from base class
-	void setupRenderPass()
+	void setupRenderPass() override
 	{
 		attachments.width = width;
 		attachments.height = height;
@@ -642,6 +642,7 @@ public:
 	// Create the Vulkan objects used in the composition pass (descriptor sets, pipelines, etc.)
 	void prepareCompositionPass()
 	{
+		////////////////////////////////////// 渲染管线2：合成阶段 //////////////////////////////////////
 		// Descriptor set layout
 		std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings =
 		{
@@ -683,7 +684,7 @@ public:
 		// Descriptor sets
 		VkDescriptorSetAllocateInfo allocInfo =
 			vks::initializers::descriptorSetAllocateInfo(descriptorPool, &descriptorSetLayouts.composition, 1);
-
+		
 		VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &descriptorSets.composition));
 
 		// Image descriptors for the offscreen color attachments
@@ -733,6 +734,7 @@ public:
 		specializationInfo.dataSize = sizeof(specializationData);
 		specializationInfo.pData = &specializationData;
 
+		// 特化常量数据
 		shaderStages[1].pSpecializationInfo = &specializationInfo;
 
 		VkGraphicsPipelineCreateInfo pipelineCI = vks::initializers::pipelineCreateInfo(pipelineLayouts.composition, renderPass, 0);
@@ -806,7 +808,7 @@ public:
 	// Prepare and initialize uniform buffer containing shader uniforms
 	void prepareUniformBuffers()
 	{
-		// Deferred vertex shader
+		// Deferred vertex shader(GBuffer阶段的ubo 放的MVP）
 		vulkanDevice->createBuffer(
 			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
@@ -891,10 +893,10 @@ public:
 		initLights();
 		prepareUniformBuffers();
 		setupDescriptorSetLayout();
-		preparePipelines();
+		preparePipelines();				// offscreen pipeline
 		setupDescriptorPool();
 		setupDescriptorSet();
-		prepareCompositionPass();
+		prepareCompositionPass();		// composition 和 transparent 阶段的pipeline
 		buildCommandBuffers();
 		prepared = true;
 	}

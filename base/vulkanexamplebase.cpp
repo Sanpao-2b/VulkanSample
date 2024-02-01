@@ -2753,6 +2753,7 @@ void VulkanExampleBase::setupFrameBuffer()
 	}
 }
 
+// 默认的renderpass创建，只有一个颜色 一个深度附件被使用，可以被重写
 void VulkanExampleBase::setupRenderPass()
 {
 	std::array<VkAttachmentDescription, 2> attachments = {};
