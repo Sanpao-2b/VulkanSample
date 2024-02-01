@@ -237,7 +237,6 @@ VkPipelineShaderStageCreateInfo VulkanExampleBase::loadShader(std::string fileNa
 	return shaderStage;
 }
 
-// �����Ϸ�߼�֡����
 void VulkanExampleBase::nextFrame()
 {
 	auto tStart = std::chrono::high_resolution_clock::now();
@@ -247,23 +246,22 @@ void VulkanExampleBase::nextFrame()
 		viewChanged();
 	}
 
-	render();	// ���ÿͻ���ʵ�ֵ�render()����
+	render();	
 	frameCounter++;
 	auto tEnd = std::chrono::high_resolution_clock::now();
 #if (defined(VK_USE_PLATFORM_IOS_MVK) || (defined(VK_USE_PLATFORM_MACOS_MVK) && !defined(VK_EXAMPLE_XCODE_GENERATED)))
 	// SRS - Calculate tDiff as time between frames vs. rendering time for iOS/macOS displayLink-driven examples project
 	auto tDiff = std::chrono::duration<double, std::milli>(tEnd - tPrevEnd).count();
 #else
-	auto tDiff = std::chrono::duration<double, std::milli>(tEnd - tStart).count();	// ����һ֡����ʱ��
+	auto tDiff = std::chrono::duration<double, std::milli>(tEnd - tStart).count();	
 #endif
-	frameTimer = (float)tDiff / 1000.0f;	// ����->��
-	camera.update(frameTimer);				// �������λ��
+	frameTimer = (float)tDiff / 1000.0f;	
+	camera.update(frameTimer);				
 	if (camera.moving())
 	{
-		// ����ƶ���������ӽ�
 		viewUpdated = true;
 	}
-	// Convert to clamped timer value ���Ƕ��������Ҫ�õı���
+	// Convert to clamped timer value 
 	if (!paused)
 	{
 		timer += timerSpeed * frameTimer;
@@ -273,12 +271,10 @@ void VulkanExampleBase::nextFrame()
 		}
 	}
 
-	// ����֡��
-	// fpsTimer:һ֡�ļ���ʱ��
 	float fpsTimer = (float)(std::chrono::duration<double, std::milli>(tEnd - lastTimestamp).count());
 	if (fpsTimer > 1000.0f)
 	{
-		lastFPS = static_cast<uint32_t>((float)frameCounter * (1000.0f / fpsTimer));	// ֡��/s
+		lastFPS = static_cast<uint32_t>((float)frameCounter * (1000.0f / fpsTimer));	
 #if defined(_WIN32)
 		if (!settings.overlay)	{
 			std::string windowTitle = getWindowTitle();
