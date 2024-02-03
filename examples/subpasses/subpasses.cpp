@@ -270,7 +270,7 @@ public:
 		}
 	}
 
-	// Override render pass setup from base class
+	// 重载base class的方法，这里创建了3个subPass 5个dependency
 	void setupRenderPass() override
 	{
 		attachments.width = width;
@@ -279,7 +279,7 @@ public:
 		createGBufferAttachments();
 
 		std::array<VkAttachmentDescription, 5> attachments{};
-		// Color attachment
+		// 重点：这个应该是把swapchain的图像作为第一个附件了，其他的则是G-Buffers
 		attachments[0].format = swapChain.colorFormat;
 		attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
 		attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -327,7 +327,7 @@ public:
 		attachments[4].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		attachments[4].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-		// Three subpasses
+		// 3个subpasses
 		std::array<VkSubpassDescription,3> subpassDescriptions{};
 
 		// First subpass: Fill G-Buffer components
@@ -350,13 +350,14 @@ public:
 
 		VkAttachmentReference colorReference = { 0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL };
 
-		VkAttachmentReference inputReferences[3];
+		VkAttachmentReference inputReferences[3];		// layout变化了，改为READ_ONLY
 		inputReferences[0] = { 1, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
 		inputReferences[1] = { 2, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
 		inputReferences[2] = { 3, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
 
 		uint32_t preserveAttachmentIndex = 1;
 
+		// 这里就跟subpass1不同了，作为颜色附件的只有一个，就是0号swapchain image view，其余3个作为inputReference
 		subpassDescriptions[1].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		subpassDescriptions[1].colorAttachmentCount = 1;
 		subpassDescriptions[1].pColorAttachments = &colorReference;
